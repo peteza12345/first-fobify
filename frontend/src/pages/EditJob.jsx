@@ -4,38 +4,57 @@ import { Form, redirect, useLoaderData } from "react-router-dom";
 import Wrapper from "../assets/wrappers/DashboardFormPage";
 import { FormRow, FormRowSelect, SubmitBtn } from "../components";
 import { JOB_STATUS, JOB_TYPE } from "../../../backend/utils/constants";
+import { useQuery } from "@tanstack/react-query";
+
+const singleJobQuery = (id) => {
+  return {
+    queryKey: ["job", id],
+    queryFn: async () => {
+      const { data } = await customFetch.get(`/jobs/${id}`);
+      return data;
+    },
+  };
+};
 
 /* eslint-disable react-refresh/only-export-components */
-export const loader = async ({ params }) => {
-  try {
-    const { data } = await customFetch.get(`/jobs/${params.id}`);
+export const loader =
+  (queryClient) =>
+  async ({ params }) => {
+    try {
+      await queryClient.ensureQueryData(singleJobQuery(params.id));
 
-    return data;
-  } catch (error) {
-    toast.error(error?.response?.data?.msg);
+      return params.id;
+    } catch (error) {
+      toast.error(error?.response?.data?.msg);
 
-    return redirect("/dashboard/all-jobs");
-  }
-};
+      return redirect("/dashboard/all-jobs");
+    }
+  };
 
-export const action = async ({ request, params }) => {
-  const formData = await request.formData(); // ใช้ในการรับข้อมูลจากฟอร์ม และส่งข้อมูลไปยัง backend
-  const data = Object.fromEntries(formData); // แปลงข้อมูลในฟอร์มเป็น object และเก็บไว้ใน data
+export const action =
+  (queryClient) =>
+  async ({ request, params }) => {
+    const formData = await request.formData(); // ใช้ในการรับข้อมูลจากฟอร์ม และส่งข้อมูลไปยัง backend
+    const data = Object.fromEntries(formData); // แปลงข้อมูลในฟอร์มเป็น object และเก็บไว้ใน data
 
-  try {
-    await customFetch.patch(`/jobs/${params.id}`, data);
-    toast.success("Job edited successfully");
+    try {
+      await customFetch.patch(`/jobs/${params.id}`, data);
+      queryClient.invalidateQueries(["jobs"]);
+      toast.success("Job edited successfully");
 
-    return redirect("/dashboard/all-jobs");
-  } catch (error) {
-    toast.error(error?.response?.data?.msg);
+      return redirect("/dashboard/all-jobs");
+    } catch (error) {
+      toast.error(error?.response?.data?.msg);
 
-    return error;
-  }
-};
+      return error;
+    }
+  };
 
 const EditJob = () => {
-  const { job } = useLoaderData();
+  const id = useLoaderData();
+  const {
+    data: { job },
+  } = useQuery(singleJobQuery(id));
 
   return (
     <Wrapper>

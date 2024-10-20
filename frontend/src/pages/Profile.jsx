@@ -1,29 +1,33 @@
 /* eslint-disable react-refresh/only-export-components */
-import { Form, useOutletContext } from "react-router-dom";
+import { Form, redirect, useOutletContext } from "react-router-dom";
 import Wrapper from "../assets/wrappers/DashboardFormPage";
 import { FormRow, SubmitBtn } from "../components";
 import { toast } from "react-toastify";
 import customFetch from "../utils/customFetch";
 
-export const action = async ({ request }) => {
-  const formData = await request.formData(); // ใช้ในการรับข้อมูลจากฟอร์ม และส่งข้อมูลไปยัง backend
-  const file = formData.get("avatar"); // เรียกข้อมูล avatar จากฟอร์ม
+export const action =
+  (queryClient) =>
+  async ({ request }) => {
+    const formData = await request.formData(); // ใช้ในการรับข้อมูลจากฟอร์ม และส่งข้อมูลไปยัง backend
+    const file = formData.get("avatar"); // เรียกข้อมูล avatar จากฟอร์ม
 
-  if (file && file.size > 500000) {
-    // ตรวจสอบขนาดของไฟล์ ถ้าเกิน 0.5 MB ให้แจ้งเตือน
-    toast.error("Image size too large");
-    return null;
-  }
+    if (file && file.size > 500000) {
+      // ตรวจสอบขนาดของไฟล์ ถ้าเกิน 0.5 MB ให้แจ้งเตือน
+      toast.error("Image size too large");
+      return null;
+    }
 
-  try {
-    await customFetch.patch("/users/update-user", formData);
-    toast.success("Profile updated successfully");
-  } catch (error) {
-    toast.error(error?.response?.data?.msg);
-  }
+    try {
+      await customFetch.patch("/users/update-user", formData);
+      toast.success("Profile updated successfully");
+      queryClient.invalidateQueries(["user"]);
 
-  return null;
-};
+      return redirect("/dashboard");
+    } catch (error) {
+      toast.error(error?.response?.data?.msg);
+      return null;
+    }
+  };
 
 const Profile = () => {
   const { user } = useOutletContext();

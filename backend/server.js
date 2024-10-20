@@ -5,6 +5,8 @@ import morgan from 'morgan';
 import mongoose from 'mongoose';
 import cookieParser from 'cookie-parser';
 import cloudinary from 'cloudinary';
+import helmet from 'helmet';
+import mongoSanitize from 'express-mongo-sanitize';
 
 dotenv.config(); // load env variables
 const app = express(); // express app
@@ -41,15 +43,8 @@ if (process.env.NODE_ENV === 'development') {
 app.use(express.static(path.resolve(__dirname, '../frontend/dist'))); // static folder for images
 app.use(cookieParser()); // cookie parser for cookies
 app.use(express.json()); // for parsing application/json request
-
-app.get('/', (req, res) => {
-  res.send('Hello World');
-});
-
-// Test toute
-app.get('/api/v1/test', (req, res) => {
-  res.json({ msg: 'test route' });
-});
+app.use(helmet()); // for security
+app.use(mongoSanitize()); // for sanitizing user input
 
 app.use('/api/v1/jobs', authenticateUser, jobRouter);
 app.use('/api/v1/auth', authRouter);
