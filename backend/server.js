@@ -38,8 +38,7 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-// app.use(express.static(path.resolve(__dirname, "./public")));
-app.use(express.static(path.resolve(__dirname, './public'))); // static folder for images
+app.use(express.static(path.resolve(__dirname, '../frontend/dist'))); // static folder for images
 app.use(cookieParser()); // cookie parser for cookies
 app.use(express.json()); // for parsing application/json request
 
@@ -58,7 +57,7 @@ app.use('/api/v1/users', authenticateUser, userRouter);
 
 
 app.get('*', (req, res) => {
-  res.sendFile(path.resolve(__dirname, './public', 'index.html'));
+  res.sendFile(path.resolve(__dirname, '../frontend/dist', 'index.html'));
 });
 
 app.use('*', (req, res) => {
