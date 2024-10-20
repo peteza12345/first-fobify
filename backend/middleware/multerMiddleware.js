@@ -1,15 +1,17 @@
 import multer from 'multer';
+import DataParser from 'datauri/parser.js';
+import path from 'path';
 
-const storage = multer.diskStorage({
-  destination: (req, file, cd) => {
-    cd(null, 'public/uploads'); // เก็บไฟล์ที่อัพโหลดไว้ที่ public/uploads
-  },
-  filename: (req, file, cd) => {
-    const fileName = file.originalname; // เก็บชื่อไฟล์ที่อัพโหลด
-    cd(null, fileName);
-  }
-});
+const storage = multer.memoryStorage();
 
 const upload = multer({ storage }); // สร้าง multer middleware
+
+const parser = new DataParser();
+
+// สร้าง middleware สําหรับอัพโหลดไฟล์
+export const formatImage = (file) => {
+  const fileExtension = path.extname(file.originalname).toString(); // หานามสกุลไฟล์ จากชื่อไฟล์
+  return parser.format(fileExtension, file.buffer).content; // แปลงไฟล์เป็น base64
+};
 
 export default upload;
